@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebXR 3D Photo Viewer</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+</head>
+<body>
+<a-scene xrweb> <!-- Ensure XR is enabled -->
+    <!-- Camera -->
+    <a-entity camera look-controls position="0 1.6 0"></a-entity>
+
+    <!-- Stereo Image -->
+    <a-entity geometry="primitive: plane" material="shader: stereo; srcLeft: #leftTexture; srcRight: #rightTexture" position="0 1.6 -3"></a-entity>
+
+    <!-- Environment -->
+    <a-sky color="#ECECEC"></a-sky>
+</a-scene>
+
+<!-- Define stereo images -->
+<img id="leftTexture" src="left_image.jpg" style="display:none">
+<img id="rightTexture" src="right_image.jpg" style="display:none">
+
+<!-- Shader code for stereoscopic effect -->
+<script id="stereo-shader" type="x-shader/x-vertex">
+    varying vec2 vUv;
+    void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+</script>
+
+<script id="stereo-fragment" type="x-shader/x-fragment">
+    varying vec2 vUv;
+    uniform sampler2D srcLeft;
+    uniform sampler2D srcRight;
+
+    void main() {
+        vec2 uv = vUv;
+        vec2 uvLeft = vec2(uv.x * 0.5, uv.y);
+        vec2 uvRight = vec2(uv.x * 0.5 + 0.5, uv.y);
+
+        vec4 colorLeft = texture2D(srcLeft, uvLeft);
+        vec4 colorRight = texture2D(srcRight, uvRight);
+
+        gl_FragColor = vec4((colorLeft.rgb + colorRight.rgb) * 0.5, 1.0);
+    }
+</script>
+</body>
+</html>
